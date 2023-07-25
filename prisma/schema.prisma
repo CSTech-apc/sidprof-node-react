@@ -1,0 +1,71 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["fullTextSearch", "fullTextIndex"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String       @id @default(uuid())
+  name        String       @db.VarChar(255)
+  email       String       @db.VarChar(255)
+  password    String       @db.VarChar(255)
+  profile     String       @default("MAN") @db.Char(3)
+  createdAt   DateTime?    @default(now())
+  updatedAt   DateTime?    @updatedAt
+  permissions Permission[]
+
+  @@fulltext([name, email, profile])
+  @@map("users")
+}
+
+model Permission {
+  id             String  @id @default(uuid())
+  permInst       Boolean @default(false)
+  permUser       Boolean @default(false)
+  permStudEnrol  Boolean @default(false)
+  permCalend     Boolean @default(false)
+  permSysEval    Boolean @default(false)
+  permSysFreq    Boolean @default(false)
+  permMatrixDisc Boolean @default(false)
+  permDisc       Boolean @default(false)
+  permClassDiary Boolean @default(false)
+  user           User?   @relation(fields: [userId], references: [id])
+  userId         String?
+
+  @@map("permissions")
+}
+
+model Period {
+  id        String    @id @default(uuid())
+  year      String    @db.VarChar(10)
+  createdAt DateTime? @default(now())
+  updatedAt DateTime? @updatedAt
+  licenses  License[]
+
+  @@fulltext([year])
+  @@map("periods")
+}
+
+model License {
+  id          String    @id @default(uuid())
+  institution String    @db.VarChar(255)
+  cnpj        String    @db.VarChar(14)
+  inep        String    @db.VarChar(8)
+  dateInit    String    @db.VarChar(10)
+  dateFin     String    @db.VarChar(10)
+  status      String    @default("ACT") @db.Char(3)
+  createdAt   DateTime? @default(now())
+  updatedAt   DateTime? @updatedAt
+  period      Period    @relation(fields: [periodId], references: [id])
+  periodId    String
+
+  @@fulltext([institution, cnpj, inep])
+  @@map("licenses")
+}
